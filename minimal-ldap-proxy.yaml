@@ -1,0 +1,10 @@
+driver: sqlite3
+conn: "./test"
+authQuery: "select password from users where name = ?"
+searchQuery: "select %s from users where name = ?"
+attributes:
+  cn: name
+  gn: gname
+  sn: sname
+  mail: email
+rdn: "cn"
