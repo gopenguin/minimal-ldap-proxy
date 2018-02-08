@@ -54,6 +54,7 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		jww.SetStdoutThreshold(jww.LevelInfo)
 		loadConfig()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
