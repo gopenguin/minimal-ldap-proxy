@@ -2,9 +2,11 @@ FROM golang:1.9 as builder
 
 WORKDIR /go/src/github.com/gopenguin/minimal-ldap-proxy
 
-COPY . .
+RUN go get -u github.com/golang/dep/cmd/dep
+COPY Gopkg.toml Gopkg.lock ./
+RUN dep ensure -vendor-only
 
-RUN go get -d -v
+COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o minimal-ldap-proxy .
 
