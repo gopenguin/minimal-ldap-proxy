@@ -1,9 +1,9 @@
 package types
 
 import (
-	"strings"
 	"fmt"
 	"github.com/spf13/pflag"
+	"strings"
 )
 
 var _ pflag.Value = &MapFlagValue{}

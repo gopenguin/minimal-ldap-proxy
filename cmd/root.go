@@ -25,8 +25,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	jww "github.com/spf13/jwalterweatherman"
+	"github.com/spf13/viper"
 
 	"github.com/gopenguin/minimal-ldap-proxy/pkg"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
@@ -52,7 +52,10 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		backend := pkg.NewBackend(cmdConfig.Driver, cmdConfig.Conn, cmdConfig.AuthQuery, cmdConfig.SearchQuery)
+		backend, err := pkg.NewBackend(cmdConfig.Driver, cmdConfig.Conn, cmdConfig.AuthQuery, cmdConfig.SearchQuery)
+		if err != nil {
+			jww.ERROR.Fatalf("Error configuring backend: %v", err)
+		}
 
 		frontend := pkg.NewFrontend(cmdConfig.ServerAddress, cmdConfig.Attributes, backend)
 
@@ -124,7 +127,7 @@ func initConfig() {
 	}
 
 	if err := viper.Unmarshal(&cmdConfig); err != nil {
-		jww.ERROR.Printf("Error umarshaling config: %v", err)
+		jww.ERROR.Printf("Error unmarshalling config: %v", err)
 	}
 
 	jww.INFO.Println("Using config file:", viper.ConfigFileUsed())

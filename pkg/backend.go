@@ -5,53 +5,43 @@ import (
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	_ "github.com/mattn/go-sqlite3"
+	jww "github.com/spf13/jwalterweatherman"
 	"strings"
 )
 
-func NewBackend(driver string, connString string, authQuery string, searchQuery string) types.Backend {
+func NewBackend(driver string, connString string, authQuery string, searchQuery string) (types.Backend, error) {
+	db, err := sql.Open(driver, connString)
+	if err != nil {
+		return nil, err
+	}
+
 	return &sqlBackend{
-		driver:     driver,
-		connString: connString,
+		db: db,
 
 		authQuery:   authQuery,
 		searchQuery: searchQuery,
-	}
+	}, nil
 }
 
 type sqlBackend struct {
-	driver     string
-	connString string
+	db *sql.DB
 
 	authQuery   string
 	searchQuery string
 }
 
 func (b *sqlBackend) Authenticate(user string, password string) bool {
-	db, err := sql.Open(b.driver, b.connString)
-	if err != nil {
-		return false
-	}
-
-	defer db.Close()
-
-	row := db.QueryRow(b.authQuery, user)
+	row := b.db.QueryRow(b.authQuery, user)
 
 	var passwordHash string
 	row.Scan(&passwordHash)
 
-	fmt.Printf("Authenticating %s", user)
+	jww.INFO.Printf("Authenticating %s\n", user)
 
 	return password == passwordHash
 }
 
 func (b *sqlBackend) Search(user string, attributes map[string]string) []types.Result {
-	db, err := sql.Open(b.driver, b.connString)
-	if err != nil {
-		return nil
-	}
-
-	defer db.Close()
-
 	var ldapAttrs, sqlAttrs []string
 
 	for ldapAttr, sqlAttr := range attributes {
@@ -65,7 +55,7 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 		attrP[i] = &attr[i]
 	}
 
-	rows, err := db.Query(fmt.Sprintf(b.searchQuery, strings.Join(sqlAttrs, ", ")), user)
+	rows, err := b.db.Query(fmt.Sprintf(b.searchQuery, strings.Join(sqlAttrs, ", ")), user)
 	if err != nil {
 		return nil
 	}

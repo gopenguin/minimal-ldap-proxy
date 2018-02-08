@@ -1,11 +1,11 @@
 package pkg
 
 import (
-	"github.com/gopenguin/minimal-ldap-proxy/types"
-	"github.com/vjeantet/goldap/message"
-	jww "github.com/spf13/jwalterweatherman"
-	ldap "github.com/vjeantet/ldapserver"
 	"fmt"
+	"github.com/gopenguin/minimal-ldap-proxy/types"
+	jww "github.com/spf13/jwalterweatherman"
+	"github.com/vjeantet/goldap/message"
+	ldap "github.com/vjeantet/ldapserver"
 )
 
 type Frontend struct {
@@ -58,6 +58,7 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 
 	user, err := f.extractUser(r.Filter())
 	if err != nil {
+		jww.WARN.Printf("extract user: %v", err)
 		res := ldap.NewSearchResultDoneResponse(ldap.LDAPResultNoSuchAttribute)
 		w.Write(res)
 		return
@@ -82,7 +83,10 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 }
 
 func (f *Frontend) Serve() {
-	go f.server.ListenAndServe(f.serverAddr)
+	go func() {
+		err := f.server.ListenAndServe(f.serverAddr)
+		jww.ERROR.Println(err)
+	}()
 }
 
 func (f *Frontend) Stop() {

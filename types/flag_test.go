@@ -1,8 +1,8 @@
 package types
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestNewMapFlag(t *testing.T) {
