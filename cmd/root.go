@@ -53,6 +53,9 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		loadConfig()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		backend, err := pkg.NewBackend(cmdConfig.Driver, cmdConfig.Conn, cmdConfig.AuthQuery, cmdConfig.SearchQuery)
 		if err != nil {
@@ -95,16 +98,11 @@ func init() {
 	RootCmd.Flags().String("rdn", "", "the rdn of the user")
 	RootCmd.Flags().AddFlag(types.NewMapFlag("attributes", "the attributes supported by the backend (format: 'key:value,key2:value2,...'"))
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minimal-ldap-proxy.yaml)")
-
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/minimal-ldap-proxy.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
-	}
-
 	viper.SetConfigName("minimal-ldap-proxy") // name of config file (without extension)
 	viper.AddConfigPath(".")                  // adding home directory as first search path
 	viper.SetEnvPrefix("LDAP_PROXY")          // set the prefix for environment variables
@@ -122,6 +120,12 @@ func initConfig() {
 
 	for _, flag := range flags {
 		viper.BindPFlag(flag, RootCmd.Flags().Lookup(flag))
+	}
+}
+
+func loadConfig() {
+	if cfgFile != "" { // enable ability to specify config file via flag
+		viper.SetConfigFile(cfgFile)
 	}
 
 	// If a config file is found, read it in.
