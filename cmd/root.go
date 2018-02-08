@@ -32,6 +32,8 @@ import (
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	"os/signal"
 	"syscall"
+	"strings"
+	"database/sql"
 )
 
 var (
@@ -86,7 +88,7 @@ func init() {
 
 	RootCmd.Flags().StringVar(&cmdConfig.ServerAddress, "serverAddress", "127.0.0.1:1389", "the address to listen on")
 
-	RootCmd.Flags().String("driver", "", "the sql driver to use (sqlite3)")
+	RootCmd.Flags().String("driver", "", fmt.Sprintf("the sql driver to use (%s)", strings.Join(sql.Drivers(), ", ")))
 	RootCmd.Flags().String("conn", "", "the connection string")
 	RootCmd.Flags().String("authQuery", "", "a sql query to retrieve the password by the username. The username is passed a the first parameter. The query must return one field, the password")
 	RootCmd.Flags().String("searchQuery", "", "a sql query to retrieve the user attributes. This string should contain one %s for the projection and one ? for the selection")
@@ -105,6 +107,7 @@ func initConfig() {
 
 	viper.SetConfigName("minimal-ldap-proxy") // name of config file (without extension)
 	viper.AddConfigPath(".")                  // adding home directory as first search path
+	viper.SetEnvPrefix("LDAP_PROXY")          // set the prefix for environment variables
 	viper.AutomaticEnv()                      // read in environment variables that match
 
 	flags := []string{
