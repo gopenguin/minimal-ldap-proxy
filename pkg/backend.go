@@ -31,12 +31,16 @@ type sqlBackend struct {
 }
 
 func (b *sqlBackend) Authenticate(user string, password string) bool {
+	jww.INFO.Printf("Authenticating %s\n", user)
+
 	row := b.db.QueryRow(b.authQuery, user)
 
 	var passwordHash string
-	row.Scan(&passwordHash)
-
-	jww.INFO.Printf("Authenticating %s\n", user)
+	err := row.Scan(&passwordHash)
+	if err != nil {
+		jww.WARN.Printf("Error fetching password: %v", err)
+		return false
+	}
 
 	return password == passwordHash
 }
@@ -57,6 +61,7 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 
 	rows, err := b.db.Query(fmt.Sprintf(b.searchQuery, strings.Join(sqlAttrs, ", ")), user)
 	if err != nil {
+		jww.WARN.Printf("Error searching user: %v", err)
 		return nil
 	}
 	defer rows.Close()
@@ -66,6 +71,7 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 	for rows.Next() {
 		err = rows.Scan(attrP...)
 		if err != nil {
+			jww.WARN.Printf("Error searching user: %v", err)
 			continue
 		}
 
