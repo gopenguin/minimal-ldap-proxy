@@ -57,12 +57,6 @@
   version = "v1.7.4"
 
 [[projects]]
-  name = "github.com/mattn/go-sqlite3"
-  packages = ["."]
-  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
-  version = "v1.6.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
@@ -127,21 +121,15 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/vjeantet/asn1-ber"
-  packages = ["."]
-  revision = "85041cd0f4769ebf4a5ae600b1e921e630d6aff0"
-
-[[projects]]
-  branch = "master"
   name = "github.com/vjeantet/goldap"
   packages = ["message"]
   revision = "ea702ca12a40a2817b90d53ec7d4ebdcc5489570"
 
 [[projects]]
+  branch = "master"
   name = "github.com/vjeantet/ldapserver"
   packages = ["."]
-  revision = "5ac58729571e52ae23768e3c270c624d4ee7fa23"
-  version = "v1.0"
+  revision = "479fece7c5f15b209e2e3ba082a89d18cd2a8207"
 
 [[projects]]
   branch = "master"
@@ -183,6 +171,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f12fd655d7b3eaaf748ecb0b45e10f51a697801c50542c130d313403cb51be7f"
+  inputs-digest = "12053c38c2f3bd9c6ec3ac21c71c4cafe18cf790ed5ef71a3d810f904e521160"
   solver-name = "gps-cdcl"
   solver-version = 1

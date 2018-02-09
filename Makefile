@@ -2,7 +2,7 @@ REGISTRY=kube-registry.kube.local
 IMAGE=gopenguin/minimal-ldap-proxy
 TAG=$(shell git rev-parse --verify HEAD)
 
-.PHONY: all clear
+.PHONY: all clean
 
 all: push
 
@@ -15,6 +15,6 @@ tag: build
 build:
 	docker build -t ${IMAGE}:${TAG} .
 
-clear:
-	docker rmi --force $(docker images --format="{{.ID}}\t{{.Repository}}" | grep "${IMAGE}" | cut -f 1)
+clean:
+	docker rmi --force $$(docker images --format="{{.ID}}\t{{.Repository}}" | grep "${IMAGE}" | cut -f 1)
 

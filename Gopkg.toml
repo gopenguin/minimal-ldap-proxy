@@ -34,10 +34,6 @@
   name = "github.com/lib/pq"
 
 [[constraint]]
-  name = "github.com/mattn/go-sqlite3"
-  version = "1.6.0"
-
-[[constraint]]
   name = "github.com/spf13/cobra"
   version = "0.0.1"
 
@@ -63,7 +59,7 @@
 
 [[constraint]]
   name = "github.com/vjeantet/ldapserver"
-  version = "1.0.0"
+  branch = "master"
 
 [[constraint]]
   name = "gopkg.in/DATA-DOG/go-sqlmock.v1"
