@@ -37,13 +37,13 @@ func (t *testBackend) Search(user string, attributes map[string]string) []types.
 func TestFrontend_handleBind(t *testing.T) {
 	withLdapServerAndClient(t, map[string]string{}, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
 		backend.bindResult = true
-		err := client.Bind("username", "password")
-		assert.Nil(t, err)
+		err := client.Bind("cn=username,ou=People,dc=example,dc=com", "password")
+		assert.NoError(t, err)
 		assert.Equal(t, "username", backend.username)
 		assert.Equal(t, "password", backend.password)
 
 		backend.bindResult = false
-		err = client.Bind("username", "password")
+		err = client.Bind("cn=username,ou=People,dc=example,dc=com", "password")
 		assert.EqualError(t, err, "LDAP Result Code 49 \"Invalid Credentials\": ")
 	})
 }
@@ -51,6 +51,7 @@ func TestFrontend_handleBind(t *testing.T) {
 func TestFrontend_handleUserSearch(t *testing.T) {
 	withLdapServerAndClient(t, map[string]string{"attr1": "a1", "attr2": "a2", "attr3": "a3"}, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
 		result, err := client.Search(&ldap.SearchRequest{
+			BaseDN: "ou=People,dc=example,dc=com",
 			Filter: "(objectClass=*)",
 		})
 
@@ -58,7 +59,7 @@ func TestFrontend_handleUserSearch(t *testing.T) {
 
 		backend.searchResult = []types.Result{
 			{
-				Rdn: "attr1=abc",
+				Rdn: "cn=abc",
 				Attributes: []types.Attribute{
 					{Name: "attr2", Value: "def"},
 					{Name: "attr3", Value: "ghi"},
@@ -67,22 +68,74 @@ func TestFrontend_handleUserSearch(t *testing.T) {
 		}
 
 		result, err = client.Search(&ldap.SearchRequest{
+			BaseDN:     "ou=People,dc=example,dc=com",
 			Attributes: []string{"attr2", "attr3"},
-			Filter:     "(attr1=abc)",
+			Filter:     "(cn=abc)",
 		})
 
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", backend.username)
 		assert.Equal(t, map[string]string{"attr2": "a2", "attr3": "a3"}, backend.attributes)
 		assert.Len(t, result.Entries, 1)
-		assert.Equal(t, "attr1=abc", result.Entries[0].DN)
+		assert.Equal(t, "cn=abc,ou=People,dc=example,dc=com", result.Entries[0].DN)
 		assert.Len(t, result.Entries[0].Attributes, 2)
 	})
 }
 
+func TestFrontend_userFromDn(t *testing.T) {
+	f := &Frontend{
+		rDn:    "cn",
+		baseDn: "ou=People,dc=example,dc=com",
+	}
+	errorMsg := "dn must have a prefix of 'cn=' and suffix of ',ou=People,dc=example,dc=com'"
+
+	tests := []struct {
+		name     string
+		value    string
+		result   string
+		errorMsg string
+	}{
+		{
+			name:   "Full match",
+			value:  "cn=user1,ou=People,dc=example,dc=com",
+			result: "user1",
+		},
+		{
+			name:     "Prefix missing",
+			value:    "user1,ou=People,dc=example,dc=com",
+			errorMsg: errorMsg,
+		},
+		{
+			name:     "Suffix missing",
+			value:    "cn=user1",
+			errorMsg: errorMsg,
+		},
+		{
+			name:     "Prefix and suffix missing",
+			value:    "user1",
+			errorMsg: errorMsg,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := f.userFromDn(test.value)
+
+			if test.errorMsg != "" {
+				assert.EqualError(t, err, test.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.result, result)
+			}
+		})
+	}
+}
+
 func withLdapServerAndClient(t *testing.T, attrs map[string]string, inner func(t *testing.T, backend *testBackend, client *ldap.Conn)) {
 	backend := &testBackend{}
-	frontend := NewFrontend("127.0.0.1:0", attrs, backend)
+	frontend := NewFrontend("127.0.0.1:0", "ou=People,dc=example,dc=com", "cn", attrs, backend)
 	frontend.Serve()
 	defer frontend.Stop()
 

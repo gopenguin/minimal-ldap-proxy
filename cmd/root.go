@@ -63,7 +63,7 @@ to quickly create a Cobra application.`,
 			jww.ERROR.Fatalf("Error configuring backend: %v", err)
 		}
 
-		frontend := pkg.NewFrontend(cmdConfig.ServerAddress, cmdConfig.Attributes, backend)
+		frontend := pkg.NewFrontend(cmdConfig.ServerAddress, cmdConfig.BaseDn, cmdConfig.Rdn, cmdConfig.Attributes, backend)
 
 		frontend.Serve()
 

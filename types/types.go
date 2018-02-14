@@ -8,6 +8,7 @@ type CmdConfig struct {
 
 	AuthQuery   string
 	SearchQuery string
+	BaseDn      string
 	Attributes  map[string]string
 	Rdn         string
 }

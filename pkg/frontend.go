@@ -6,11 +6,15 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/vjeantet/goldap/message"
 	ldap "github.com/vjeantet/ldapserver"
+	"strings"
 )
 
 type Frontend struct {
 	serverAddr string
 	attributes map[string]string
+
+	baseDn string
+	rDn    string
 
 	server  *ldap.Server
 	backend types.Backend
@@ -20,9 +24,11 @@ func init() {
 	ldap.Logger = jww.INFO
 }
 
-func NewFrontend(serverAddr string, attributes map[string]string, backend types.Backend) (frontend *Frontend) {
+func NewFrontend(serverAddr string, baseDn string, rDn string, attributes map[string]string, backend types.Backend) (frontend *Frontend) {
 	frontend = &Frontend{
 		serverAddr: serverAddr,
+		baseDn:     baseDn,
+		rDn:        rDn,
 		attributes: attributes,
 		server:     ldap.NewServer(),
 		backend:    backend,
@@ -31,7 +37,7 @@ func NewFrontend(serverAddr string, attributes map[string]string, backend types.
 	router := ldap.NewRouteMux()
 	router.Bind(frontend.handleBind)
 	router.Search(frontend.handleUserSearch).
-		BaseDn("")
+		BaseDn(frontend.baseDn)
 
 	frontend.server.Handle(router)
 
@@ -41,22 +47,29 @@ func NewFrontend(serverAddr string, attributes map[string]string, backend types.
 func (f *Frontend) handleBind(w ldap.ResponseWriter, m *ldap.Message) {
 	r := m.GetBindRequest()
 	res := ldap.NewBindResponse(ldap.LDAPResultInvalidCredentials)
+	defer func() { w.Write(res) }()
+
 	if r.AuthenticationChoice() == "simple" {
-		user := string(r.Name())
+		dn := string(r.Name())
+
+		user, err := f.userFromDn(dn)
+		if err != nil {
+			jww.WARN.Printf("Unable to get username: %v", err)
+			return
+		}
+
 		password := string(r.AuthenticationSimple())
 
 		if f.backend.Authenticate(user, password) {
 			res.SetResultCode(ldap.LDAPResultSuccess)
 		}
 	}
-
-	w.Write(res)
 }
 
 func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 	r := m.GetSearchRequest()
 
-	user, err := f.extractUser(r.Filter())
+	user, err := f.userFromFilter(r.Filter())
 	if err != nil {
 		jww.WARN.Printf("extract user: %v", err)
 		res := ldap.NewSearchResultDoneResponse(ldap.LDAPResultNoSuchAttribute)
@@ -69,7 +82,7 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 	results := f.backend.Search(user, filteredAttributes)
 
 	for _, result := range results {
-		entry := ldap.NewSearchResultEntry(result.Rdn + string(r.BaseObject()))
+		entry := ldap.NewSearchResultEntry(fmt.Sprintf("%s,%s", result.Rdn, string(r.BaseObject())))
 
 		for _, attr := range result.Attributes {
 			entry.AddAttribute(message.AttributeDescription(attr.Name), message.AttributeValue(attr.Value))
@@ -106,12 +119,27 @@ func (f *Frontend) filterAttributes(attributes message.AttributeSelection) map[s
 	return filtered
 }
 
-func (f *Frontend) extractUser(filter message.Filter) (user string, err error) {
+func (f *Frontend) userFromDn(dn string) (user string, err error) {
+	prefix := f.rDn + "="
+	suffix := "," + f.baseDn
+
+	if strings.HasPrefix(dn, prefix) && strings.HasSuffix(dn, suffix) {
+		return strings.TrimSuffix(strings.TrimPrefix(dn, prefix), suffix), nil
+	}
+
+	return "", fmt.Errorf("dn must have a prefix of '%s' and suffix of '%s'", prefix, suffix)
+}
+
+func (f *Frontend) userFromFilter(filter message.Filter) (user string, err error) {
 	switch filter.(type) {
 	case message.FilterEqualityMatch:
 		eq := filter.(message.FilterEqualityMatch)
+		if string(eq.AttributeDesc()) != f.rDn {
+			return "", fmt.Errorf("invalid rdn '%s', should be '%s'", string(eq.AttributeDesc()), f.rDn)
+		}
+
 		return string(eq.AssertionValue()), nil
 	default:
-		return "", fmt.Errorf("filter of type %T not supported", filter)
+		return "", fmt.Errorf("filter '%T' not supported", filter)
 	}
 }

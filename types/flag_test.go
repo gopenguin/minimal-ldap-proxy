@@ -128,7 +128,7 @@ func TestMapFlagValue_String(t *testing.T) {
 
 			ret := test.value.String()
 
-			assert.Equal(t, test.string, ret)
+			assert.EqualValues(t, test.string, ret)
 		})
 	}
 }
