@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	jww "github.com/spf13/jwalterweatherman"
 	"strings"
 )

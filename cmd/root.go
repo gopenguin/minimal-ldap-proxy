@@ -110,6 +110,7 @@ func init() {
 	RootCmd.Flags().String("authQuery", "", "a sql query to retrieve the password by the username. The username is passed a the first parameter. The query must return one field, the password")
 	RootCmd.Flags().String("searchQuery", "", "a sql query to retrieve the user attributes. This string should contain one %s for the projection and one ? for the selection")
 	RootCmd.Flags().String("rdn", "", "the rdn of the user")
+	RootCmd.Flags().String("baseDn", "", "the base dn for users")
 
 	attributes = types.NewMapFlag("attributes", "the attributes supported by the backend (format: 'key:value,key2:value2,...'")
 
@@ -132,6 +133,7 @@ func initConfig() {
 		"authQuery",
 		"searchQuery",
 		"rdn",
+		"baseDn",
 	}
 
 	for _, flag := range flags {
