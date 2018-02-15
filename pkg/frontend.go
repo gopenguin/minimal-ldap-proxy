@@ -82,10 +82,10 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 	results := f.backend.Search(user, filteredAttributes)
 
 	for _, result := range results {
-		entry := ldap.NewSearchResultEntry(fmt.Sprintf("%s,%s", result.Rdn, string(r.BaseObject())))
+		entry := ldap.NewSearchResultEntry(fmt.Sprintf("%s=%s,%s", f.rDn, result.Attributes[f.rDn], string(r.BaseObject())))
 
-		for _, attr := range result.Attributes {
-			entry.AddAttribute(message.AttributeDescription(attr.Name), message.AttributeValue(attr.Value))
+		for key, value := range result.Attributes {
+			entry.AddAttribute(message.AttributeDescription(key), message.AttributeValue(value))
 		}
 
 		w.Write(entry)

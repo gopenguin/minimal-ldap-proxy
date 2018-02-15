@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	jww "github.com/spf13/jwalterweatherman"
 	"strings"
 )
@@ -78,13 +79,10 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 		}
 
 		result := types.Result{
-			Attributes: make([]types.Attribute, len(attributes)),
+			Attributes: make(map[string]string),
 		}
 		for i := range attr {
-			result.Attributes[i] = types.Attribute{
-				Name:  ldapAttrs[i],
-				Value: attr[i],
-			}
+			result.Attributes[ldapAttrs[i]] = attr[i]
 		}
 
 		results = append(results, result)

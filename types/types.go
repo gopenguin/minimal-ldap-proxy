@@ -15,12 +15,7 @@ type CmdConfig struct {
 
 type Result struct {
 	Rdn        string
-	Attributes []Attribute
-}
-
-type Attribute struct {
-	Name  string
-	Value string
+	Attributes map[string]string
 }
 
 type Backend interface {
