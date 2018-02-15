@@ -53,6 +53,8 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 		sqlAttrs = append(sqlAttrs, sqlAttr)
 	}
 
+	jww.INFO.Printf("searching for %s with %s", user, strings.Join(ldapAttrs, ", "))
+
 	attr := make([]string, len(attributes))
 	attrP := make([]interface{}, len(attributes))
 	for i := range attr {
