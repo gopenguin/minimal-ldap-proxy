@@ -32,12 +32,12 @@ func TestMapFlagValue_Set(t *testing.T) {
 		},
 		{
 			desc:        "single value",
-			stringValue: "key:value",
+			stringValue: "key=value",
 			expected:    MapFlagValue{"key": "value"},
 		},
 		{
 			desc:        "multiple values",
-			stringValue: "k1:v1,k2:v2,k3:v3",
+			stringValue: "k1=v1,k2=v2,k3=v3",
 			expected:    MapFlagValue{"k1": "v1", "k2": "v2", "k3": "v3"},
 		},
 		{
@@ -111,12 +111,12 @@ func TestMapFlagValue_String(t *testing.T) {
 		},
 		{
 			desc:   "single value",
-			string: "key:value",
+			string: "key=value",
 			value:  MapFlagValue{"key": "value"},
 		},
 		{
 			desc:   "multiple values",
-			string: "k1:v1,k2:v2,k3:v3",
+			string: "k1=v1,k2=v2,k3=v3",
 			value:  MapFlagValue{"k1": "v1", "k2": "v2", "k3": "v3"},
 		},
 	}
@@ -134,5 +134,5 @@ func TestMapFlagValue_String(t *testing.T) {
 }
 
 func TestMapFlagValue_Type(t *testing.T) {
-	assert.Equal(t, "map[string]string", MapFlagValue{}.Type())
+	assert.Equal(t, "map", (&MapFlagValue{}).Type())
 }

@@ -46,7 +46,7 @@ func TestSqlBackend_Search(t *testing.T) {
 
 	result := backend.Search("username", map[string]string{"ldap1": "attr1", "ldap2": "attr3"})
 
-	assert.Equal(t, result, []types.Result{
+	assert.EqualValues(t, []types.Result{
 		{
 			Attributes: []types.Attribute{
 				{
@@ -59,7 +59,7 @@ func TestSqlBackend_Search(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, result)
 
 	assert.Nil(t, mock.ExpectationsWereMet())
 }

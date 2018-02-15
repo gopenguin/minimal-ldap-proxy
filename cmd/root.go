@@ -28,17 +28,20 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
 
+	"database/sql"
 	"github.com/gopenguin/minimal-ldap-proxy/pkg"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
+	"github.com/gopenguin/minimal-ldap-proxy/util"
+	"github.com/spf13/pflag"
 	"os/signal"
-	"syscall"
 	"strings"
-	"database/sql"
+	"syscall"
 )
 
 var (
-	cfgFile   string
-	cmdConfig types.CmdConfig
+	cfgFile    string
+	attributes *pflag.Flag
+	cmdConfig  types.CmdConfig
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -53,9 +56,19 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PreRunE: func(cmd *cobra.Command, args []string) error {
 		jww.SetStdoutThreshold(jww.LevelInfo)
-		loadConfig()
+
+		err := loadConfig()
+		if err != nil {
+			return err
+		}
+
+		if !util.ContainsString(sql.Drivers(), cmdConfig.Driver) {
+			return fmt.Errorf("%s is not one of the supported drivers: %s", cmdConfig.Driver, strings.Join(sql.Drivers(), ", "))
+		}
+
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		backend, err := pkg.NewBackend(cmdConfig.Driver, cmdConfig.Conn, cmdConfig.AuthQuery, cmdConfig.SearchQuery)
@@ -97,7 +110,10 @@ func init() {
 	RootCmd.Flags().String("authQuery", "", "a sql query to retrieve the password by the username. The username is passed a the first parameter. The query must return one field, the password")
 	RootCmd.Flags().String("searchQuery", "", "a sql query to retrieve the user attributes. This string should contain one %s for the projection and one ? for the selection")
 	RootCmd.Flags().String("rdn", "", "the rdn of the user")
-	RootCmd.Flags().AddFlag(types.NewMapFlag("attributes", "the attributes supported by the backend (format: 'key:value,key2:value2,...'"))
+
+	attributes = types.NewMapFlag("attributes", "the attributes supported by the backend (format: 'key:value,key2:value2,...'")
+
+	RootCmd.Flags().AddFlag(attributes)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/minimal-ldap-proxy.yaml)")
 }
@@ -115,7 +131,6 @@ func initConfig() {
 		"conn",
 		"authQuery",
 		"searchQuery",
-		"attributes",
 		"rdn",
 	}
 
@@ -124,20 +139,37 @@ func initConfig() {
 	}
 }
 
-func loadConfig() {
+func loadConfig() error {
 	if cfgFile != "" { // enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 	}
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		jww.ERROR.Printf("Error loading config file %s: %v", viper.ConfigFileUsed(), err)
+	if err := viper.ReadInConfig(); err == nil {
+		jww.INFO.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
 	if err := viper.Unmarshal(&cmdConfig); err != nil {
-		jww.ERROR.Printf("Error unmarshalling config: %v", err)
+		return fmt.Errorf("unable to unmarshal config: %v", err)
 	}
 
-	jww.INFO.Println("Using config file:", viper.ConfigFileUsed())
+	parseAttributesFlag()
+
 	jww.INFO.Printf("Configuration: %+v", cmdConfig)
+
+	return nil
+}
+
+func parseAttributesFlag() {
+	value, exists := os.LookupEnv("LDAP_PROXY_ATTRIBUTES")
+	if exists {
+		attributes.Value.Set(value)
+		attributes.Changed = true
+	}
+
+	if attributes.Changed {
+		// override attributes flag
+		attrsValue := attributes.Value.(*types.MapFlagValue)
+		cmdConfig.Attributes = attrsValue.Get().(map[string]string)
+	}
 }

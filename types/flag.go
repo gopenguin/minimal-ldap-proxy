@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/pflag"
 	"strings"
+	"sort"
 )
 
 var _ pflag.Value = &MapFlagValue{}
@@ -19,9 +20,16 @@ func NewMapFlag(name string, usage string) *pflag.Flag {
 }
 
 func (v *MapFlagValue) String() string {
+	var keys []string
+	for key, _ := range *v {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
 	var entries []string
-	for key, value := range *v {
-		entries = append(entries, key+":"+value)
+	for _, key := range keys {
+		entries = append(entries, key+"="+(*v)[key])
 	}
 
 	return strings.Join(entries, ",")
@@ -35,7 +43,7 @@ func (v *MapFlagValue) Set(value string) error {
 			continue
 		}
 
-		split := strings.Split(entry, ":")
+		split := strings.Split(entry, "=")
 
 		if len(split) != 2 {
 			return fmt.Errorf("not a key value pair: %s", entry)
@@ -47,10 +55,10 @@ func (v *MapFlagValue) Set(value string) error {
 	return nil
 }
 
-func (v MapFlagValue) Type() string {
-	return "map[string]string"
+func (v *MapFlagValue) Type() string {
+	return "map"
 }
 
-func (v MapFlagValue) Get() interface{} {
-	return (map[string]string)(v)
+func (v *MapFlagValue) Get() interface{} {
+	return (map[string]string)(*v)
 }
