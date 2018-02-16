@@ -42,7 +42,7 @@ func (b *sqlBackend) Authenticate(user string, password string) bool {
 		return false
 	}
 
-	return password == passwordHash
+	return Verify(password, passwordHash)
 }
 
 func (b *sqlBackend) Search(user string, attributes map[string]string) []types.Result {

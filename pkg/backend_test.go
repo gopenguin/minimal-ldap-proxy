@@ -21,9 +21,9 @@ func TestSqlBackend_Authenticate(t *testing.T) {
 		authQuery: "SELECT password FROM user WHERE name = ?",
 	}
 
-	mock.ExpectQuery("SELECT password FROM user WHERE name = ?").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"password"}).AddRow("s3cr3t"))
+	mock.ExpectQuery("SELECT password FROM user WHERE name = ?").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"password"}).AddRow("{SSHA}RrAeHR4zMHdNUfvtEibV9yTbtmMY7nF/"))
 
-	result := backend.Authenticate("username", "s3cr3t")
+	result := backend.Authenticate("username", "test123")
 
 	assert.True(t, result)
 	assert.Nil(t, mock.ExpectationsWereMet())
@@ -48,15 +48,9 @@ func TestSqlBackend_Search(t *testing.T) {
 
 	assert.EqualValues(t, []types.Result{
 		{
-			Attributes: []types.Attribute{
-				{
-					Name:  "ldap1",
-					Value: "a",
-				},
-				{
-					Name:  "ldap2",
-					Value: "b",
-				},
+			Attributes: map[string]string{
+				"ldap1": "a",
+				"ldap2": "b",
 			},
 		},
 	}, result)

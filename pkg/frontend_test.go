@@ -59,10 +59,10 @@ func TestFrontend_handleUserSearch(t *testing.T) {
 
 		backend.searchResult = []types.Result{
 			{
-				Rdn: "cn=abc",
-				Attributes: []types.Attribute{
-					{Name: "attr2", Value: "def"},
-					{Name: "attr3", Value: "ghi"},
+				Attributes: map[string]string{
+					"cn":    "abc",
+					"attr2": "def",
+					"attr3": "ghi",
 				},
 			},
 		}
@@ -78,7 +78,7 @@ func TestFrontend_handleUserSearch(t *testing.T) {
 		assert.Equal(t, map[string]string{"attr2": "a2", "attr3": "a3"}, backend.attributes)
 		assert.Len(t, result.Entries, 1)
 		assert.Equal(t, "cn=abc,ou=People,dc=example,dc=com", result.Entries[0].DN)
-		assert.Len(t, result.Entries[0].Attributes, 2)
+		assert.Len(t, result.Entries[0].Attributes, 3)
 	})
 }
 
