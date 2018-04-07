@@ -41,7 +41,7 @@ func (b *sqlBackend) Authenticate(user string, password string) bool {
 	return Verify(password, passwordHash)
 }
 
-func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
+func (b *sqlBackend) Search(user string, attributes []string) *types.Result {
 	attrs := make(map[string]interface{})
 
 	rows, err := b.db.Queryx(b.searchQuery, user)
@@ -51,7 +51,9 @@ func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 	}
 	defer rows.Close()
 
-	var results []types.Result
+	result := &types.Result{
+		Attributes: make(map[string][]string),
+	}
 
 	for rows.Next() {
 		err = rows.MapScan(attrs)
@@ -62,17 +64,36 @@ func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 
 		mapBytesToString(attrs)
 
-		result := types.Result{
-			Attributes: make(map[string]string),
-		}
 		for _, ldapAttr := range attributes {
-			result.Attributes[ldapAttr] = fmt.Sprint(attrs[ldapAttr])
+			result.Attributes[ldapAttr] = append(result.Attributes[ldapAttr], fmt.Sprint(attrs[ldapAttr]))
 		}
-
-		results = append(results, result)
 	}
 
-	return results
+	deduplicateAttributes(result)
+
+	return result
+}
+
+func deduplicateAttributes(result *types.Result) {
+	for i := range result.Attributes {
+		result.Attributes[i] = deduplicateStringSlice(result.Attributes[i])
+	}
+}
+
+func deduplicateStringSlice(values []string) []string {
+	encountered := make(map[string]bool)
+	var result []string
+
+	for _, value := range values {
+		if encountered[value] {
+			// already processed
+		} else {
+			encountered[value] = true
+			result = append(result, value)
+		}
+	}
+
+	return result
 }
 
 func mapBytesToString(m map[string]interface{}) {

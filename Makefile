@@ -39,7 +39,7 @@ minimal-ldap-proxy: ${GO_SRC}
 	go build --tags "${GO_BUILD_TAGS}" -o minimal-ldap-proxy .
 
 run:
-	@CGO_ENABLED=1 GOOS=linux go run ${GO_BUILD_ARGS} main.go
+	@CGO_ENABLED=1 GOOS=linux go run --tags "${GO_BUILD_TAGS}" main.go
 
 clean: clean-docker
 	rm -rf minimal-ldap-proxy

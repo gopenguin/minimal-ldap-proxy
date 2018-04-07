@@ -15,10 +15,10 @@ type CmdConfig struct {
 
 type Result struct {
 	Rdn        string
-	Attributes map[string]string
+	Attributes map[string][]string
 }
 
 type Backend interface {
 	Authenticate(username string, password string) bool
-	Search(user string, attributes []string) []Result
+	Search(user string, attributes []string) *Result
 }
