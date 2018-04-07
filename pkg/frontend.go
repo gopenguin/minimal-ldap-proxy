@@ -10,8 +10,9 @@ import (
 )
 
 type Frontend struct {
-	serverAddr string
-	attributes map[string]bool
+	serverAddr    string
+	attributes    []string
+	attributesMap map[string]bool
 
 	baseDn string
 	rDn    string
@@ -26,22 +27,24 @@ func init() {
 
 func NewFrontend(serverAddr string, baseDn string, rDn string, attributes []string, backend types.Backend) (frontend *Frontend) {
 	frontend = &Frontend{
-		serverAddr: serverAddr,
-		baseDn:     baseDn,
-		rDn:        rDn,
-		attributes: make(map[string]bool),
-		server:     ldap.NewServer(),
-		backend:    backend,
+		serverAddr:    serverAddr,
+		baseDn:        baseDn,
+		rDn:           rDn,
+		attributes:    attributes,
+		attributesMap: make(map[string]bool),
+		server:        ldap.NewServer(),
+		backend:       backend,
 	}
 
 	for _, attr := range attributes {
-		frontend.attributes[attr] = true
+		frontend.attributesMap[attr] = true
 	}
 
 	router := ldap.NewRouteMux()
 	router.Bind(frontend.handleBind)
-	router.Search(frontend.handleUserSearch).
+	router.Search(frontend.handleSearchUser).
 		BaseDn(frontend.baseDn)
+	router.Search(frontend.handleSearchGeneric)
 
 	frontend.server.Handle(router)
 
@@ -58,20 +61,28 @@ func (f *Frontend) handleBind(w ldap.ResponseWriter, m *ldap.Message) {
 
 		user, err := f.userFromDn(dn)
 		if err != nil {
-			jww.WARN.Printf("Unable to get username: %v", err)
+			jww.WARN.Printf("Unable to get DN: %v", err)
 			return
 		}
+
+		jww.INFO.Printf("Authenticating %s\n", user)
 
 		password := string(r.AuthenticationSimple())
 
 		if f.backend.Authenticate(user, password) {
 			res.SetResultCode(ldap.LDAPResultSuccess)
 		}
+	} else {
+		jww.INFO.Printf("Unsupported authentication type %s", r.AuthenticationChoice())
 	}
 }
 
-func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
+func (f *Frontend) handleSearchUser(w ldap.ResponseWriter, m *ldap.Message) {
 	r := m.GetSearchRequest()
+
+	filteredAttributes := f.filterAttributes(r.Attributes())
+
+	jww.INFO.Printf("Searching on %s for %s with %s", r.BaseObject(), r.FilterString(), strings.Join(filteredAttributes, ", "))
 
 	user, err := f.userFromFilter(r.Filter())
 	if err != nil {
@@ -80,8 +91,6 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 		w.Write(res)
 		return
 	}
-
-	filteredAttributes := f.filterAttributes(r.Attributes())
 
 	results := f.backend.Search(user, filteredAttributes)
 
@@ -99,6 +108,15 @@ func (f *Frontend) handleUserSearch(w ldap.ResponseWriter, m *ldap.Message) {
 	w.Write(res)
 }
 
+func (f *Frontend) handleSearchGeneric(w ldap.ResponseWriter, m *ldap.Message) {
+	r := m.GetSearchRequest()
+
+	jww.INFO.Printf("Unhandled search request: %s", r.BaseObject())
+
+	res := ldap.NewSearchResultDoneResponse(ldap.LDAPResultNoSuchObject)
+	w.Write(res)
+}
+
 func (f *Frontend) Serve() {
 	go func() {
 		err := f.server.ListenAndServe(f.serverAddr)
@@ -111,10 +129,15 @@ func (f *Frontend) Stop() {
 }
 
 func (f *Frontend) filterAttributes(attributes message.AttributeSelection) []string {
-	var filtered []string
+	// if no attributes are selected, return all attributes by default
+	if len(attributes) == 0 {
+		return f.attributes
+	}
+
+	filtered := []string{f.rDn}
 
 	for _, attr := range attributes {
-		_, ok := f.attributes[string(attr)]
+		_, ok := f.attributesMap[string(attr)]
 		if ok {
 			filtered = append(filtered, string(attr))
 		}

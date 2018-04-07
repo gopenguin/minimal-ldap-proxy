@@ -5,7 +5,6 @@ import (
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	sql "github.com/jmoiron/sqlx"
 	jww "github.com/spf13/jwalterweatherman"
-	"strings"
 )
 
 func NewBackend(driver string, connString string, authQuery string, searchQuery string) (types.Backend, error) {
@@ -30,8 +29,6 @@ type sqlBackend struct {
 }
 
 func (b *sqlBackend) Authenticate(user string, password string) bool {
-	jww.INFO.Printf("Authenticating %s\n", user)
-
 	row := b.db.QueryRow(b.authQuery, user)
 
 	var passwordHash string
@@ -45,9 +42,6 @@ func (b *sqlBackend) Authenticate(user string, password string) bool {
 }
 
 func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
-
-	jww.INFO.Printf("Searching for %s with %s", user, strings.Join(attributes, ", "))
-
 	attrs := make(map[string]interface{})
 
 	rows, err := b.db.Queryx(b.searchQuery, user)
