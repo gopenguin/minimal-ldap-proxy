@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
+	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/lib/pq"
 	jww "github.com/spf13/jwalterweatherman"
 	"strings"

@@ -1,4 +1,7 @@
 .idea/
 *.db
 vendor/
+.docker-hlp/
+
+minimal-ldap-proxy
 

@@ -1,5 +1,5 @@
 driver: sqlite3
-conn: "./test"
+conn: "./test.db"
 authQuery: "select password from users where name = ?"
 searchQuery: "select %s from users where name = ?"
 attributes:
@@ -7,4 +7,5 @@ attributes:
   gn: gname
   sn: sname
   mail: email
+baseDn: "ou=People,dc=example,dc=com"
 rdn: "cn"
