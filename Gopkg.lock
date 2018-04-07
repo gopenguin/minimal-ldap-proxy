@@ -43,6 +43,16 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jsimonetti/pwscheme"
+  packages = [
+    "ssha",
+    "ssha256",
+    "ssha512"
+  ]
+  revision = "76804708ecad54773871b35dbaa44f517973e395"
+
+[[projects]]
+  branch = "master"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -133,6 +143,19 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = [
+    "argon2",
+    "bcrypt",
+    "blake2b",
+    "blowfish",
+    "pbkdf2",
+    "scrypt"
+  ]
+  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
@@ -163,6 +186,36 @@
   version = "v1.2"
 
 [[projects]]
+  name = "gopkg.in/hlandau/easymetric.v1"
+  packages = ["cexp"]
+  revision = "1c173222e345c2ba115e0f483821c6da2d3b0fa9"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "gopkg.in/hlandau/measurable.v1"
+  packages = ["."]
+  revision = "d96a009bd9bda94dd1294105e67e8c1794e533d3"
+  version = "v1.0.1"
+
+[[projects]]
+  branch = "argon2"
+  name = "gopkg.in/hlandau/passlib.v1"
+  packages = [
+    ".",
+    "abstract",
+    "hash/argon2",
+    "hash/argon2/raw",
+    "hash/bcrypt",
+    "hash/bcryptsha256",
+    "hash/scrypt",
+    "hash/scrypt/raw",
+    "hash/sha2crypt",
+    "hash/sha2crypt/raw"
+  ]
+  revision = "a0a65cbfc479d6d277814c815efa140c656d4cb0"
+  source = "github.com/F21/passlib"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -171,6 +224,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "12053c38c2f3bd9c6ec3ac21c71c4cafe18cf790ed5ef71a3d810f904e521160"
+  inputs-digest = "4904057afd97504258295d79a4cfe8e12c8cec0e49345d9599e30e0bf22eb9bc"
   solver-name = "gps-cdcl"
   solver-version = 1

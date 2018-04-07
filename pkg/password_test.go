@@ -6,6 +6,9 @@ import (
 )
 
 func TestVerify(t *testing.T) {
+	assert.True(t, Verify("test123", "$argon2i$v=19$m=32768,t=4,p=4$x2B68O4dFADMgr35a2JbPg$xab/2tyfCYcs4th0QZkDEJZk3rdZ2BSdOCkzy706ot8"))
+	assert.False(t, Verify("test1234", "$argon2i$v=19$m=32768,t=4,p=4$x2B68O4dFADMgr35a2JbPg$xab/2tyfCYcs4th0QZkDEJZk3rdZ2BSdOCkzy706ot8"))
+
 	assert.True(t, Verify("test123", "{SSHA}RrAeHR4zMHdNUfvtEibV9yTbtmMY7nF/"))
 	assert.False(t, Verify("test124", "{SSHA}RrAeHR4zMHdNUfvtEibV9yTbtmMY7nF/"))
 
