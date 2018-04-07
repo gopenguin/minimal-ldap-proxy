@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	sql "github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	jww "github.com/spf13/jwalterweatherman"
 	"strings"
 )
@@ -48,7 +46,7 @@ func (b *sqlBackend) Authenticate(user string, password string) bool {
 
 func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 
-	jww.INFO.Printf("searching for %s with %s", user, strings.Join(attributes, ", "))
+	jww.INFO.Printf("Searching for %s with %s", user, strings.Join(attributes, ", "))
 
 	attrs := make(map[string]interface{})
 
@@ -68,6 +66,8 @@ func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 			continue
 		}
 
+		mapBytesToString(attrs)
+
 		result := types.Result{
 			Attributes: make(map[string]string),
 		}
@@ -79,4 +79,12 @@ func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 	}
 
 	return results
+}
+
+func mapBytesToString(m map[string]interface{}) {
+	for k, v := range m {
+		if b, ok := v.([]byte); ok {
+			m[k] = string(b)
+		}
+	}
 }
