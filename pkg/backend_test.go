@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gopenguin/minimal-ldap-proxy/types"
+	sql "github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -17,7 +18,7 @@ func TestSqlBackend_Authenticate(t *testing.T) {
 	defer db.Close()
 
 	backend := &sqlBackend{
-		db:        db,
+		db:        sql.NewDb(db, "sqlmock"),
 		authQuery: "SELECT password FROM user WHERE name = ?",
 	}
 
@@ -38,13 +39,13 @@ func TestSqlBackend_Search(t *testing.T) {
 	defer db.Close()
 
 	backend := &sqlBackend{
-		db:          db,
-		searchQuery: "SELECT %s FROM user WHERE name = ?",
+		db:          sql.NewDb(db, "sqlmock"),
+		searchQuery: "SELECT attr1 AS ldap1, attr3 AS ldap2 FROM user WHERE name = ?",
 	}
 
-	mock.ExpectQuery("SELECT attr1, attr3 FROM user WHERE name = ?").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"attr1", "attr3"}).AddRow("a", "b"))
+	mock.ExpectQuery("SELECT attr1 AS ldap1, attr3 AS ldap2 FROM user WHERE name = ?").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"ldap1", "ldap2"}).AddRow("a", "b"))
 
-	result := backend.Search("username", map[string]string{"ldap1": "attr1", "ldap2": "attr3"})
+	result := backend.Search("username", []string{"ldap1", "ldap2"})
 
 	assert.EqualValues(t, []types.Result{
 		{

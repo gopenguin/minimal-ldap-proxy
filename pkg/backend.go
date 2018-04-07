@@ -1,11 +1,11 @@
 package pkg
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
-	_ "github.com/mattn/go-sqlite3"
+	sql "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	jww "github.com/spf13/jwalterweatherman"
 	"strings"
 )
@@ -46,23 +46,13 @@ func (b *sqlBackend) Authenticate(user string, password string) bool {
 	return Verify(password, passwordHash)
 }
 
-func (b *sqlBackend) Search(user string, attributes map[string]string) []types.Result {
-	var ldapAttrs, sqlAttrs []string
+func (b *sqlBackend) Search(user string, attributes []string) []types.Result {
 
-	for ldapAttr, sqlAttr := range attributes {
-		ldapAttrs = append(ldapAttrs, ldapAttr)
-		sqlAttrs = append(sqlAttrs, sqlAttr)
-	}
+	jww.INFO.Printf("searching for %s with %s", user, strings.Join(attributes, ", "))
 
-	jww.INFO.Printf("searching for %s with %s", user, strings.Join(ldapAttrs, ", "))
+	attrs := make(map[string]interface{})
 
-	attr := make([]string, len(attributes))
-	attrP := make([]interface{}, len(attributes))
-	for i := range attr {
-		attrP[i] = &attr[i]
-	}
-
-	rows, err := b.db.Query(fmt.Sprintf(b.searchQuery, strings.Join(sqlAttrs, ", ")), user)
+	rows, err := b.db.Queryx(b.searchQuery, user)
 	if err != nil {
 		jww.WARN.Printf("Error searching user: %v", err)
 		return nil
@@ -72,7 +62,7 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 	var results []types.Result
 
 	for rows.Next() {
-		err = rows.Scan(attrP...)
+		err = rows.MapScan(attrs)
 		if err != nil {
 			jww.WARN.Printf("Error searching user: %v", err)
 			continue
@@ -81,8 +71,8 @@ func (b *sqlBackend) Search(user string, attributes map[string]string) []types.R
 		result := types.Result{
 			Attributes: make(map[string]string),
 		}
-		for i := range attr {
-			result.Attributes[ldapAttrs[i]] = attr[i]
+		for _, ldapAttr := range attributes {
+			result.Attributes[ldapAttr] = fmt.Sprint(attrs[ldapAttr])
 		}
 
 		results = append(results, result)

@@ -1,8 +1,8 @@
 package pkg
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestVerify(t *testing.T) {

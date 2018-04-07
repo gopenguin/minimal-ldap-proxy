@@ -32,16 +32,15 @@ import (
 	"github.com/gopenguin/minimal-ldap-proxy/pkg"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	"github.com/gopenguin/minimal-ldap-proxy/util"
-	"github.com/spf13/pflag"
 	"os/signal"
 	"strings"
 	"syscall"
 )
 
 var (
-	cfgFile    string
-	attributes *pflag.Flag
-	cmdConfig  types.CmdConfig
+	cfgFile string
+
+	cmdConfig types.CmdConfig
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -111,10 +110,7 @@ func init() {
 	RootCmd.Flags().String("searchQuery", "", "a sql query to retrieve the user attributes. This string should contain one %s for the projection and one ? for the selection")
 	RootCmd.Flags().String("rdn", "", "the rdn of the user")
 	RootCmd.Flags().String("baseDn", "", "the base dn for users")
-
-	attributes = types.NewMapFlag("attributes", "the attributes supported by the backend (format: 'key:value,key2:value2,...'")
-
-	RootCmd.Flags().AddFlag(attributes)
+	RootCmd.Flags().StringSlice("attributes", nil, "the attributes supported by the query provided to the backend backend (format: 'attr1,attr2,attr3,...')")
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/minimal-ldap-proxy.yaml)")
 }
@@ -134,6 +130,7 @@ func initConfig() {
 		"searchQuery",
 		"rdn",
 		"baseDn",
+		"attributes",
 	}
 
 	for _, flag := range flags {
@@ -155,23 +152,7 @@ func loadConfig() error {
 		return fmt.Errorf("unable to unmarshal config: %v", err)
 	}
 
-	parseAttributesFlag()
-
 	jww.INFO.Printf("Configuration: %+v", cmdConfig)
 
 	return nil
-}
-
-func parseAttributesFlag() {
-	value, exists := os.LookupEnv("LDAP_PROXY_ATTRIBUTES")
-	if exists {
-		attributes.Value.Set(value)
-		attributes.Changed = true
-	}
-
-	if attributes.Changed {
-		// override attributes flag
-		attrsValue := attributes.Value.(*types.MapFlagValue)
-		cmdConfig.Attributes = attrsValue.Get().(map[string]string)
-	}
 }

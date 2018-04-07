@@ -9,7 +9,7 @@ type CmdConfig struct {
 	AuthQuery   string
 	SearchQuery string
 	BaseDn      string
-	Attributes  map[string]string
+	Attributes  []string
 	Rdn         string
 }
 
@@ -20,5 +20,5 @@ type Result struct {
 
 type Backend interface {
 	Authenticate(username string, password string) bool
-	Search(user string, attributes map[string]string) []Result
+	Search(user string, attributes []string) []Result
 }

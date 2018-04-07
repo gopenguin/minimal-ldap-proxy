@@ -1,11 +1,11 @@
 driver: sqlite3
 conn: "./test.db"
 authQuery: "select password from users where name = ?"
-searchQuery: "select %s from users where name = ?"
+searchQuery: "select name as cn, gname as gn, sname as sn, email as mail from users where name = ?"
 attributes:
-  cn: name
-  gn: gname
-  sn: sname
-  mail: email
+  - cn
+  - gn
+  - sn
+  - mail
 baseDn: "ou=People,dc=example,dc=com"
 rdn: "cn"

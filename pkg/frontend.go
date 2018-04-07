@@ -11,7 +11,7 @@ import (
 
 type Frontend struct {
 	serverAddr string
-	attributes map[string]string
+	attributes map[string]bool
 
 	baseDn string
 	rDn    string
@@ -24,14 +24,18 @@ func init() {
 	ldap.Logger = jww.INFO
 }
 
-func NewFrontend(serverAddr string, baseDn string, rDn string, attributes map[string]string, backend types.Backend) (frontend *Frontend) {
+func NewFrontend(serverAddr string, baseDn string, rDn string, attributes []string, backend types.Backend) (frontend *Frontend) {
 	frontend = &Frontend{
 		serverAddr: serverAddr,
 		baseDn:     baseDn,
 		rDn:        rDn,
-		attributes: attributes,
+		attributes: make(map[string]bool),
 		server:     ldap.NewServer(),
 		backend:    backend,
+	}
+
+	for _, attr := range attributes {
+		frontend.attributes[attr] = true
 	}
 
 	router := ldap.NewRouteMux()
@@ -106,13 +110,13 @@ func (f *Frontend) Stop() {
 	f.server.Stop()
 }
 
-func (f *Frontend) filterAttributes(attributes message.AttributeSelection) map[string]string {
-	filtered := make(map[string]string)
+func (f *Frontend) filterAttributes(attributes message.AttributeSelection) []string {
+	var filtered []string
 
 	for _, attr := range attributes {
-		value, ok := f.attributes[string(attr)]
+		_, ok := f.attributes[string(attr)]
 		if ok {
-			filtered[string(attr)] = value
+			filtered = append(filtered, string(attr))
 		}
 	}
 

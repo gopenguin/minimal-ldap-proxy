@@ -16,7 +16,7 @@ type testBackend struct {
 	password   string
 	bindResult bool
 
-	attributes   map[string]string
+	attributes   []string
 	searchResult []types.Result
 }
 
@@ -27,7 +27,7 @@ func (t *testBackend) Authenticate(username string, password string) bool {
 	return t.bindResult
 }
 
-func (t *testBackend) Search(user string, attributes map[string]string) []types.Result {
+func (t *testBackend) Search(user string, attributes []string) []types.Result {
 	t.username = user
 	t.attributes = attributes
 
@@ -35,7 +35,7 @@ func (t *testBackend) Search(user string, attributes map[string]string) []types.
 }
 
 func TestFrontend_handleBind(t *testing.T) {
-	withLdapServerAndClient(t, map[string]string{}, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
+	withLdapServerAndClient(t, nil, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
 		backend.bindResult = true
 		err := client.Bind("cn=username,ou=People,dc=example,dc=com", "password")
 		assert.NoError(t, err)
@@ -49,7 +49,7 @@ func TestFrontend_handleBind(t *testing.T) {
 }
 
 func TestFrontend_handleUserSearch(t *testing.T) {
-	withLdapServerAndClient(t, map[string]string{"attr1": "a1", "attr2": "a2", "attr3": "a3"}, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
+	withLdapServerAndClient(t, []string{"attr1", "attr2", "attr3"}, func(t *testing.T, backend *testBackend, client *ldap.Conn) {
 		result, err := client.Search(&ldap.SearchRequest{
 			BaseDN: "ou=People,dc=example,dc=com",
 			Filter: "(objectClass=*)",
@@ -75,7 +75,7 @@ func TestFrontend_handleUserSearch(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "abc", backend.username)
-		assert.Equal(t, map[string]string{"attr2": "a2", "attr3": "a3"}, backend.attributes)
+		assert.Equal(t, []string{"attr2", "attr3"}, backend.attributes)
 		assert.Len(t, result.Entries, 1)
 		assert.Equal(t, "cn=abc,ou=People,dc=example,dc=com", result.Entries[0].DN)
 		assert.Len(t, result.Entries[0].Attributes, 3)
@@ -133,7 +133,7 @@ func TestFrontend_userFromDn(t *testing.T) {
 	}
 }
 
-func withLdapServerAndClient(t *testing.T, attrs map[string]string, inner func(t *testing.T, backend *testBackend, client *ldap.Conn)) {
+func withLdapServerAndClient(t *testing.T, attrs []string, inner func(t *testing.T, backend *testBackend, client *ldap.Conn)) {
 	backend := &testBackend{}
 	frontend := NewFrontend("127.0.0.1:0", "ou=People,dc=example,dc=com", "cn", attrs, backend)
 	frontend.Serve()
