@@ -12,7 +12,7 @@ COPY . .
 
 ARG GO_BUILD_TAGS="nosqlite3 postgres mysql"
 
-RUN CGO_ENABLED=1 GOOS=linux go build -tags "json1 fts5 sqlite_omit_load_extension ${GO_BUILD_TAGS}" -a -installsuffix cgo -ldflags "-linkmode external -extldflags \"-static -lc\" -w -s" -o minimal-ldap-proxy .
+RUN CGO_ENABLED=1 GOOS=linux go build -tags "json1 fts5 sqlite_omit_load_extension ${GO_BUILD_TAGS}" -a -installsuffix cgo -ldflags "-linkmode external -extldflags \"-static -lc\" -w -s" -o minimal-ldap-proxy ./cmd/minimal-ldap-proxy
 
 
 FROM scratch

@@ -42,6 +42,12 @@
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/howeyc/gopass"
+  packages = ["."]
+  revision = "bf9dde6d0d2c004a008c27aaee91170c786f6db8"
+
+[[projects]]
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
@@ -177,14 +183,18 @@
     "blake2b",
     "blowfish",
     "pbkdf2",
-    "scrypt"
+    "scrypt",
+    "ssh/terminal"
   ]
   revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
 
 [[projects]]
@@ -251,6 +261,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "05755ce6ee94ebfbb27c73b0469dd04a24a313a218cc888d3f9127a4c1a26db1"
+  inputs-digest = "62d58d41425a12e39c4550142ed974b25b41297a71607f93e814f2d9a81117a6"
   solver-name = "gps-cdcl"
   solver-version = 1
