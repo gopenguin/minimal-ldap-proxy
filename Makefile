@@ -29,9 +29,9 @@ clean:
 ###############################################################################
 
 DOCKER_HLP=.docker-hlp
-REGISTRY=kube-registry.kube.local
-IMAGE=gopenguin/minimal-ldap-proxy
-TAG=$(shell git rev-parse --verify HEAD)
+REGISTRY?=kube-registry.kube.local
+IMAGE?=gopenguin/minimal-ldap-proxy
+TAG?=$(shell git rev-parse --verify HEAD)
 
 push: ${DOCKER_HLP}/push
 tag: ${DOCKER_HLP}/tag
