@@ -1,4 +1,6 @@
 driver: sqlite3
+cert: server.crt
+key: server.key
 conn: "./test.db"
 authQuery: "select password from users where name = ?"
 searchQuery: "select u.name  as cn, u.gname as gn, u.sname as sn, u.email as mail, g.name  as memberOf from users as u join user_groups as ug on (u.id = ug.user_id) join groups as g on (g.id = ug.group_id) where u.name = ?"

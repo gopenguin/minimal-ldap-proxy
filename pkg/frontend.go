@@ -7,10 +7,12 @@ import (
 	"github.com/vjeantet/goldap/message"
 	ldap "github.com/vjeantet/ldapserver"
 	"strings"
+	"crypto/tls"
 )
 
 type Frontend struct {
 	serverAddr    string
+	cert          tls.Certificate
 	attributes    []string
 	attributesMap map[string]bool
 
@@ -25,9 +27,10 @@ func init() {
 	ldap.Logger = jww.INFO
 }
 
-func NewFrontend(serverAddr string, baseDn string, rDn string, attributes []string, backend types.Backend) (frontend *Frontend) {
+func NewFrontend(serverAddr string, cert tls.Certificate, baseDn string, rDn string, attributes []string, backend types.Backend) (frontend *Frontend) {
 	frontend = &Frontend{
 		serverAddr:    serverAddr,
+		cert:          cert,
 		baseDn:        baseDn,
 		rDn:           rDn,
 		attributes:    attributes,
@@ -124,13 +127,35 @@ func (f *Frontend) handleSearchGeneric(w ldap.ResponseWriter, m *ldap.Message) {
 
 func (f *Frontend) Serve() {
 	go func() {
-		err := f.server.ListenAndServe(f.serverAddr)
+		err := f.server.ListenAndServe(f.serverAddr, f.secureConnection)
 		jww.ERROR.Println(err)
 	}()
 }
 
 func (f *Frontend) Stop() {
 	f.server.Stop()
+}
+
+func (f *Frontend) secureConnection(s *ldap.Server) {
+	config := &tls.Config{
+		Certificates:             []tls.Certificate{f.cert},
+		MinVersion:               tls.VersionTLS12,
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		},
+		ServerName:   "127.0.0.1",
+	}
+
+	s.Listener = tls.NewListener(s.Listener, config)
+
+	jww.INFO.Printf("Listener secured: %v", formatTlsConfig(config))
 }
 
 func (f *Frontend) filterAttributes(attributes message.AttributeSelection) []string {
@@ -174,4 +199,8 @@ func (f *Frontend) userFromFilter(filter message.Filter) (user string, err error
 	default:
 		return "", fmt.Errorf("filter '%T' not supported", filter)
 	}
+}
+
+func formatTlsConfig(c *tls.Config) string {
+	return fmt.Sprintf("{MinVersion: %v, MaxVersion: %v, ServerName: %v}", c.MinVersion, c.MaxVersion, c.ServerName)
 }

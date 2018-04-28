@@ -35,6 +35,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"crypto/tls"
 )
 
 var (
@@ -75,7 +76,12 @@ to quickly create a Cobra application.`,
 			jww.ERROR.Fatalf("Error configuring backend: %v", err)
 		}
 
-		frontend := pkg.NewFrontend(cmdConfig.ServerAddress, cmdConfig.BaseDn, cmdConfig.Rdn, cmdConfig.Attributes, backend)
+		cert, err := tls.LoadX509KeyPair(cmdConfig.Cert, cmdConfig.Key)
+		if err != nil {
+			jww.ERROR.Fatalf("Error loading tls certificate: %v", err)
+		}
+
+		frontend := pkg.NewFrontend(cmdConfig.ServerAddress, cert, cmdConfig.BaseDn, cmdConfig.Rdn, cmdConfig.Attributes, backend)
 
 		frontend.Serve()
 
@@ -102,7 +108,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.Flags().StringVar(&cmdConfig.ServerAddress, "serverAddress", "127.0.0.1:1389", "the address to listen on")
+	RootCmd.Flags().String("serverAddress", "127.0.0.1:1636", "the address to listen on")
+	RootCmd.Flags().String("cert", "", "a pem encoded certificate")
+	RootCmd.Flags().String("key", "", "a pem encoded certificate key")
 
 	RootCmd.Flags().String("driver", "", fmt.Sprintf("the sql driver to use (%s)", strings.Join(sql.Drivers(), ", ")))
 	RootCmd.Flags().String("conn", "", "the connection string")
@@ -131,6 +139,8 @@ func initConfig() {
 		"rdn",
 		"baseDn",
 		"attributes",
+		"cert",
+		"key",
 	}
 
 	for _, flag := range flags {

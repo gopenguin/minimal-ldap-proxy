@@ -2,6 +2,8 @@ package types
 
 type CmdConfig struct {
 	ServerAddress string
+	Cert          string
+	Key           string
 
 	Driver string
 	Conn   string

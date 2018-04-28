@@ -3,6 +3,8 @@
 vendor/
 .docker-hlp/
 
-./minimal-ldap-proxy
-./mlpcli
+/minimal-ldap-proxy
+/mlpcli
+/server.crt
+/server.key
 
