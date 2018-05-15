@@ -15,11 +15,11 @@
 package app
 
 import (
+	"fmt"
+	"github.com/gopenguin/minimal-ldap-proxy/pkg/password"
+	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
 	"os"
-	"fmt"
-	"github.com/howeyc/gopass"
-	"github.com/gopenguin/minimal-ldap-proxy/pkg/password"
 )
 
 // passwordCmd represents the password command

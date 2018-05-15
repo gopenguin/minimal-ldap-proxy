@@ -28,6 +28,7 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
 
+	"crypto/tls"
 	"database/sql"
 	"github.com/gopenguin/minimal-ldap-proxy/pkg"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
@@ -35,7 +36,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"crypto/tls"
 )
 
 var (

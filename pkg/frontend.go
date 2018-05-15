@@ -1,14 +1,14 @@
 package pkg
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/vjeantet/goldap/message"
 	ldap "github.com/vjeantet/ldapserver"
 	"strings"
-	"crypto/tls"
-	"crypto/x509"
 )
 
 type Frontend struct {

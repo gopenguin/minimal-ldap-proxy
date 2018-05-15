@@ -10,7 +10,7 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "mlpcli",
 	Short: "The command line interface for minimal-ldap-proxy",
-	Long: `The command line interface for minimal-ldap-proxy allows you to interact the the service and administrate it.`,
+	Long:  `The command line interface for minimal-ldap-proxy allows you to interact the the service and administrate it.`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

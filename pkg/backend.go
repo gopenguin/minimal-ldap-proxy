@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/gopenguin/minimal-ldap-proxy/pkg/password"
 	"github.com/gopenguin/minimal-ldap-proxy/types"
 	sql "github.com/jmoiron/sqlx"
 	jww "github.com/spf13/jwalterweatherman"
-	"github.com/gopenguin/minimal-ldap-proxy/pkg/password"
 )
 
 func NewBackend(driver string, connString string, authQuery string, searchQuery string) (types.Backend, error) {
