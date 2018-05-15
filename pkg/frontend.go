@@ -8,6 +8,7 @@ import (
 	ldap "github.com/vjeantet/ldapserver"
 	"strings"
 	"crypto/tls"
+	"crypto/x509"
 )
 
 type Frontend struct {
@@ -150,7 +151,6 @@ func (f *Frontend) secureConnection(s *ldap.Server) {
 			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 			tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
 		},
-		ServerName:   "127.0.0.1",
 	}
 
 	s.Listener = tls.NewListener(s.Listener, config)
@@ -202,5 +202,21 @@ func (f *Frontend) userFromFilter(filter message.Filter) (user string, err error
 }
 
 func formatTlsConfig(c *tls.Config) string {
-	return fmt.Sprintf("{MinVersion: %v, MaxVersion: %v, ServerName: %v}", c.MinVersion, c.MaxVersion, c.ServerName)
+	return fmt.Sprintf("{MinVersion: %v, MaxVersion: %v, SAN: [%s]}", c.MinVersion, c.MaxVersion, strings.Join(getSans(c.Certificates), ", "))
+}
+
+func getSans(certs []tls.Certificate) []string {
+	var sans []string
+
+	for _, cert := range certs {
+		x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+		if err != nil {
+			jww.WARN.Printf("Error extracting SANs: %v", err)
+			continue
+		}
+
+		sans = append(sans, x509Cert.DNSNames...)
+	}
+
+	return sans
 }
